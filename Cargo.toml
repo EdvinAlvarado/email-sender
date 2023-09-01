@@ -13,5 +13,5 @@ eframe = "0.22.0"
 egui = "0.22.0"
 outlook-exe = "0.1.0"
 rfd = "0.11.4"
-serde = "1.0.188"
+serde = {version = "1.0.188", features = ["derive"]}
 serde_yaml = "0.9.25"
