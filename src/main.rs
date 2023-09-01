@@ -58,20 +58,33 @@ impl EmailSenderApp {
         let mut rdr = csv::Reader::from_path(self.user_list.as_path()).unwrap();
         for res in rdr.deserialize() {
             let user: User = res.expect("Not a user record");
-            let body = format!(self.email.body, username = username(user.email), password = user.password);
+            let username = email_sender::username(user.email.as_str());
+            let fullname = email_sender::fullname(user.email.as_str());
+
+            let body = self.email.body
+                .replace("{username}", username.as_str())
+                .replace("{fullname}", fullname.as_str())
+                .replace("{password}", user.password.as_str());
+
+            let subject = self.email.subject
+                .replace("{username}", username.as_str())
+                .replace("{fullname}", fullname.as_str())
+                .replace("{password}", user.password.as_str());
             
             if self.hide_password_from_cc && !self.email.cc.is_empty() {
                 MessageBuilder::new()
                     .with_recipient(user.email)
-                    .with_subject(self.email.subject)
+                    .with_subject(subject.as_str())
                     .with_body(body)
                     .spawn()
                     .unwrap();
                 
-                let body_for_cc = format!(self.email.body, username = username(user.email), password = "");
+                let body_for_cc = self.email.body
+                    .replace("{username}", username.as_str())
+                    .replace("{password}", "[hidden]");
                 MessageBuilder::new()
-                    .with_recipient(self.email.cc)
-                    .with_subject(self.email.subject)
+                    .with_recipient(self.email.cc.as_str())
+                    .with_subject(subject.as_str())
                     .with_body(body_for_cc)
                     .spawn()
                     .unwrap();
@@ -79,8 +92,8 @@ impl EmailSenderApp {
             else {
                  MessageBuilder::new()
                     .with_recipient(user.email)
-                    .with_recipient_cc(self.email.cc)
-                    .with_subject(self.email.subject)
+                    .with_recipient_cc(self.email.cc.as_str())
+                    .with_subject(subject.as_str())
                     .with_body(body)
                     .spawn()
                     .unwrap();               
