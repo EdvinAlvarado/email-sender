@@ -2,7 +2,8 @@ use std::{path::PathBuf, fs};
 use eframe::egui;
 use serde::{Serialize, Deserialize};
 use rfd;
-
+use csv;
+use outlook_exe::MessageBuilder;
 
 fn main() {
 	let native_options = eframe::NativeOptions::default();
@@ -17,6 +18,7 @@ fn main() {
 struct EmailSenderApp {
 	hide_password_from_cc: bool,
 	template: PathBuf,
+    user_list: PathBuf,
 	email: Email
 }
 
@@ -24,7 +26,14 @@ struct EmailSenderApp {
 struct Email {
 	subject: String,
 	cc: String,
-	body: String,	
+	body: String,
+}
+
+
+#[derive(Default, Serialize, Deserialize)]
+struct User {
+    email: String,
+    password: String,
 }
 
 impl EmailSenderApp {
@@ -35,8 +44,49 @@ impl EmailSenderApp {
 		// for e.g. egui::PaintCallback.
 		Self::default()
 	}
-	fn send_emails(& self) {
-		todo!()
+	fn send_emails(&mut self) {
+        if self.template.as_os_str().is_empty() {
+            self.file_save_as();
+        } else {
+            self.file_save();
+        }
+
+ 		if let Some(path) = rfd::FileDialog::new().add_filter("csv", &["csv"]).pick_file() {
+			self.user_list= path;
+		}
+
+        let mut rdr = csv::Reader::from_path(self.user_list.as_path()).unwrap();
+        for res in rdr.deserialize() {
+            let user: User = res.expect("Not a user record");
+            let body = format!(self.email.body, username = username(user.email), password = user.password);
+            
+            if self.hide_password_from_cc && !self.email.cc.is_empty() {
+                MessageBuilder::new()
+                    .with_recipient(user.email)
+                    .with_subject(self.email.subject)
+                    .with_body(body)
+                    .spawn()
+                    .unwrap();
+                
+                let body_for_cc = format!(self.email.body, username = username(user.email), password = "");
+                MessageBuilder::new()
+                    .with_recipient(self.email.cc)
+                    .with_subject(self.email.subject)
+                    .with_body(body_for_cc)
+                    .spawn()
+                    .unwrap();
+            }
+            else {
+                 MessageBuilder::new()
+                    .with_recipient(user.email)
+                    .with_recipient_cc(self.email.cc)
+                    .with_subject(self.email.subject)
+                    .with_body(body)
+                    .spawn()
+                    .unwrap();               
+            }
+        }
+        todo!()
 	}
 	fn file_open(&mut self) {
 		if let Some(path) = rfd::FileDialog::new().add_filter("yaml", &["yaml"]).pick_file() {
