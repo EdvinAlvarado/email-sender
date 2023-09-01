@@ -9,12 +9,12 @@ fn main() {
 	eframe::run_native(
 		"Email Sender",
 		native_options,
-		Box::new(|cc| Box::new(MyEguiApp::new(cc)))
+		Box::new(|cc| Box::new(EmailSenderApp::new(cc)))
 	).unwrap();
 }
 
 #[derive(Default, Serialize, Deserialize)]
-struct MyEguiApp {
+struct EmailSenderApp {
 	hide_password_from_cc: bool,
 	template: PathBuf,
 	email: Email
@@ -27,7 +27,7 @@ struct Email {
 	body: String,	
 }
 
-impl MyEguiApp {
+impl EmailSenderApp {
 	fn new(cc: &eframe::CreationContext<'_>) -> Self {
 		// Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
 		// Restore app state using cc.storage (requires the "persistence" feature).
@@ -50,14 +50,14 @@ impl MyEguiApp {
 		fs::write(self.template.as_path(), yaml_text).unwrap();
 	}
 	fn file_save_as(&mut self) {
-		if let Some(path) = rfd::FileDialog::new().add_filter("yaml", &["yaml"]).pick_file() {
+		if let Some(path) = rfd::FileDialog::new().add_filter("yaml", &["yaml"]).save_file() {
 			self.template = path;
 		}
 		self.file_save();
 	}
 }
 
-impl eframe::App for MyEguiApp {
+impl eframe::App for EmailSenderApp {
 	fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
 		egui::CentralPanel::default().show(ctx, |ui| {
 			ui.heading("Email Sender");
@@ -71,7 +71,7 @@ impl eframe::App for MyEguiApp {
 	}
 }
 
-fn show_menu(ui: &mut egui::Ui, app: &mut MyEguiApp) {
+fn show_menu(ui: &mut egui::Ui, app: &mut EmailSenderApp) {
 		use egui::{menu, Button};
 
 		menu::bar(ui, |ui| {
