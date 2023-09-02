@@ -59,6 +59,7 @@ impl EmailSenderApp {
 		let mut rdr = csv::Reader::from_path(self.user_list.as_path()).unwrap();
 		for res in rdr.deserialize() {
 			let user: User = res.expect("Not a user record");
+			self.send_email(user);
 
 		}
 	}
