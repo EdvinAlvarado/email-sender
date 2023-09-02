@@ -18,7 +18,7 @@ fn main() {
 struct EmailSenderApp {
 	hide_password_from_cc: bool,
 	template: PathBuf,
-    user_list: PathBuf,
+	user_list: PathBuf,
 	email: Email
 }
 
@@ -32,8 +32,8 @@ struct Email {
 
 #[derive(Default, Serialize, Deserialize)]
 struct User {
-    email: String,
-    password: String,
+	email: String,
+	password: String,
 }
 
 impl EmailSenderApp {
@@ -45,61 +45,64 @@ impl EmailSenderApp {
 		Self::default()
 	}
 	fn send_emails(&mut self) {
-        if self.template.as_os_str().is_empty() {
-            self.file_save_as();
-        } else {
-            self.file_save();
-        }
+		if self.template.as_os_str().is_empty() {
+			self.file_save_as();
+		} else {
+			self.file_save();
+		}
 
  		if let Some(path) = rfd::FileDialog::new().add_filter("csv", &["csv"]).pick_file() {
 			self.user_list= path;
 		}
 
-        let mut rdr = csv::Reader::from_path(self.user_list.as_path()).unwrap();
-        for res in rdr.deserialize() {
-            let user: User = res.expect("Not a user record");
-            let username = email_sender::username(user.email.as_str());
-            let fullname = email_sender::fullname(user.email.as_str());
+		let mut rdr = csv::Reader::from_path(self.user_list.as_path()).unwrap();
+		for res in rdr.deserialize() {
+			let user: User = res.expect("Not a user record");
 
-            let body = self.email.body
-                .replace("{username}", username.as_str())
-                .replace("{fullname}", fullname.as_str())
-                .replace("{password}", user.password.as_str());
+		}
+	}
+	fn send_email(& self, user: User) {
+		let username = email_sender::username(user.email.as_str());
+		let fullname = email_sender::fullname(user.email.as_str());
 
-            let subject = self.email.subject
-                .replace("{username}", username.as_str())
-                .replace("{fullname}", fullname.as_str())
-                .replace("{password}", user.password.as_str());
-            
-            if self.hide_password_from_cc && !self.email.cc.is_empty() {
-                MessageBuilder::new()
-                    .with_recipient(user.email)
-                    .with_subject(subject.as_str())
-                    .with_body(body)
-                    .spawn()
-                    .unwrap();
-                
-                let body_for_cc = self.email.body
-                    .replace("{username}", username.as_str())
-                    .replace("{password}", "[hidden]");
-                MessageBuilder::new()
-                    .with_recipient(self.email.cc.as_str())
-                    .with_subject(subject.as_str())
-                    .with_body(body_for_cc)
-                    .spawn()
-                    .unwrap();
-            }
-            else {
-                 MessageBuilder::new()
-                    .with_recipient(user.email)
-                    .with_recipient_cc(self.email.cc.as_str())
-                    .with_subject(subject.as_str())
-                    .with_body(body)
-                    .spawn()
-                    .unwrap();               
-            }
-        }
-        todo!()
+		let body = self.email.body
+			.replace("{username}", username.as_str())
+			.replace("{fullname}", fullname.as_str())
+			.replace("{password}", user.password.as_str());
+
+		let subject = self.email.subject
+			.replace("{username}", username.as_str())
+			.replace("{fullname}", fullname.as_str())
+			.replace("{password}", user.password.as_str());
+		
+		if self.hide_password_from_cc && !self.email.cc.is_empty() {
+			MessageBuilder::new()
+				.with_recipient(user.email)
+				.with_subject(subject.as_str())
+				.with_body(body)
+				.spawn()
+				.unwrap();
+			
+			let body_for_cc = self.email.body
+				.replace("{username}", username.as_str())
+				.replace("{password}", "[hidden]");
+			MessageBuilder::new()
+				.with_recipient(self.email.cc.as_str())
+				.with_subject(subject.as_str())
+				.with_body(body_for_cc)
+				.spawn()
+				.unwrap();
+		}
+		else {
+			MessageBuilder::new()
+				.with_recipient(user.email)
+				.with_recipient_cc(self.email.cc.as_str())
+				.with_subject(subject.as_str())
+				.with_body(body)
+				.spawn()
+				.unwrap();
+		}
+		}
 	}
 	fn file_open(&mut self) {
 		if let Some(path) = rfd::FileDialog::new().add_filter("yaml", &["yaml"]).pick_file() {
