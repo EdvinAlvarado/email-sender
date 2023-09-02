@@ -44,6 +44,7 @@ impl EmailSenderApp {
 		// for e.g. egui::PaintCallback.
 		Self::default()
 	}
+
 	fn send_emails(&mut self) {
 		if self.template.as_os_str().is_empty() {
 			self.file_save_as();
@@ -102,8 +103,8 @@ impl EmailSenderApp {
 				.spawn()
 				.unwrap();
 		}
-		}
 	}
+	
 	fn file_open(&mut self) {
 		if let Some(path) = rfd::FileDialog::new().add_filter("yaml", &["yaml"]).pick_file() {
 			self.template = path;
