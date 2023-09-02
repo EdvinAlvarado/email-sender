@@ -130,10 +130,19 @@ impl eframe::App for EmailSenderApp {
 			ui.heading("Email Sender");
 			show_menu(ui, self);
 			ui.checkbox(&mut self.hide_password_from_cc, "Hide password from cc?");
-			ui.text_edit_singleline(&mut self.email.subject);
-			ui.text_edit_singleline(&mut self.email.cc);
-			ui.text_edit_multiline(&mut self.email.body);
-			if ui.button("send emails 📤").clicked() {self.send_emails();}
+			ui.horizontal(|ui| {
+				ui.label("subject:");
+				ui.text_edit_singleline(&mut self.email.subject);
+			});
+			ui.horizontal(|ui| {
+				ui.label("cc:");
+				ui.text_edit_singleline(&mut self.email.cc);
+			});
+			ui.horizontal(|ui| {
+				ui.label("body:");
+				ui.text_edit_multiline(&mut self.email.body);
+			});
+			if ui.button("📤 send emails").clicked() {self.send_emails();}
 		});
 	}
 }
