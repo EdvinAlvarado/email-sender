@@ -122,13 +122,25 @@ impl EmailSenderApp {
 		}
 		self.file_save();
 	}
+
+	fn show_menu(&mut self, ui: &mut egui::Ui) {
+			use egui::{menu, Button};
+
+			menu::bar(ui, |ui| {
+					ui.menu_button("File", |ui| {
+							if ui.button("🗁 Open").clicked() {self.file_open()}
+							if ui.button("🗐 Save").clicked() {self.file_save()}
+							if ui.button("🗐 Save as").clicked() {self.file_save_as()}
+					}) 
+			});
+	}
 }
 
 impl eframe::App for EmailSenderApp {
 	fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
 		egui::CentralPanel::default().show(ctx, |ui| {
 			ui.heading("Email Sender");
-			show_menu(ui, self);
+			self.show_menu(ui);
 			ui.checkbox(&mut self.hide_password_from_cc, "Hide password from cc?");
 			ui.horizontal(|ui| {
 				ui.label("subject:");
@@ -147,17 +159,6 @@ impl eframe::App for EmailSenderApp {
 	}
 }
 
-fn show_menu(ui: &mut egui::Ui, app: &mut EmailSenderApp) {
-		use egui::{menu, Button};
-
-		menu::bar(ui, |ui| {
-				ui.menu_button("File", |ui| {
-						if ui.button("🗁 Open").clicked() {app.file_open()}
-						if ui.button("🗐 Save").clicked() {app.file_save()}
-						if ui.button("🗐 Save as").clicked() {app.file_save_as()}
-				}) 
-		});
-}
 
 fn ui_counter(ui: &mut egui::Ui, counter: &mut i32) {
 	// Put the buttons and label on the same row:
