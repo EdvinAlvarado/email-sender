@@ -19,16 +19,23 @@ struct EmailSenderApp {
 	hide_password_from_cc: bool,
 	template: PathBuf,
 	user_list: PathBuf,
-	email: Email
+	email: EmailTemplate
 }
 
 #[derive(Default, Serialize, Deserialize)]
 struct Email {
-	subject: String,
+	to: String,
 	cc: String,
+	subject: String,
 	body: String,
 }
 
+#[derive(Default, Serialize, Deserialize)]
+struct EmailTemplate {
+	cc: String,
+	subject: String,
+	body: String,
+}
 
 #[derive(Default, Serialize, Deserialize)]
 struct User {
