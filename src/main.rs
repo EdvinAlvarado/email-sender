@@ -67,11 +67,6 @@ impl EmailSenderApp {
 		let mut emails: Vec<Email> = Vec::new();
 		for res in rdr.deserialize() {
 			let user: User = res.expect("Not a user record");
-			self.send_email(user);
-
-		}
-	}
-	fn send_email(& self, user: User) {
 		let username = email_sender::username(user.email.as_str()).unwrap();
 		let fullname = email_sender::fullname(user.email.as_str()).unwrap();
 
