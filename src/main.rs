@@ -53,16 +53,19 @@ impl EmailSenderApp {
 	}
 
 	fn send_emails(&mut self) {
+		// autosave template
 		if self.template.as_os_str().is_empty() {
 			self.file_save_as();
 		} else {
 			self.file_save();
 		}
 
+		// open user list
  		if let Some(path) = rfd::FileDialog::new().add_filter("csv", &["csv"]).pick_file() {
 			self.user_list= path;
 		}
 
+		// read user list and create email json
 		let mut rdr = csv::Reader::from_path(self.user_list.as_path()).unwrap();
 		let mut emails: Vec<Email> = Vec::new();
 		for res in rdr.deserialize() {
