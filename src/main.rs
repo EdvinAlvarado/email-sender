@@ -1,9 +1,9 @@
-use std::{path::PathBuf, fs};
+use std::{path::PathBuf, fs, process::Command};
 use eframe::egui;
 use serde::{Serialize, Deserialize};
 use rfd;
 use csv;
-use outlook_exe::MessageBuilder;
+
 
 fn main() {
 	let native_options = eframe::NativeOptions::default();
@@ -57,6 +57,7 @@ impl EmailSenderApp {
 		}
 
 		let mut rdr = csv::Reader::from_path(self.user_list.as_path()).unwrap();
+		let mut emails: Vec<Email> = Vec::new();
 		for res in rdr.deserialize() {
 			let user: User = res.expect("Not a user record");
 			self.send_email(user);
@@ -88,21 +89,29 @@ impl EmailSenderApp {
 			let body_for_cc = self.email.body
 				.replace("{username}", username.as_str())
 				.replace("{password}", "[hidden]");
-			MessageBuilder::new()
-				.with_recipient(self.email.cc.as_str())
-				.with_subject(subject.as_str())
-				.with_body(body_for_cc)
-				.spawn()
-				.unwrap();
+				
+				emails.push(
+					Email { to: user.email.clone(), cc: String::new(), subject: subject.clone(), body: body}
+				);
+				emails.push(
+					Email { to: self.email.cc.clone(), cc: String::new(), subject: subject, body: body_for_cc }
+				);	
 		}
 		else {
-			MessageBuilder::new()
-				.with_recipient(user.email)
-				.with_recipient_cc(self.email.cc.as_str())
-				.with_subject(subject.as_str())
-				.with_body(body)
-				.spawn()
-				.unwrap();
+				emails.push(
+					Email { to: user.email, cc: self.email.cc.clone(), subject: subject, body: body }
+				);
+			}
+		}
+
+		// run email backend
+		if let Some(res_path) = rfd::FileDialog::new().add_filter("json", &["json"]).save_file() {
+			let email_json_str = serde_json::to_string(&emails).expect("serde failed");
+			fs::write(res_path.as_path(), email_json_str).unwrap();
+			Command::new("./email_backend.exe")
+				.arg(res_path.as_os_str())
+				.output()
+				.expect("failed to send email");
 		}
 	}
 	
