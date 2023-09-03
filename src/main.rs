@@ -64,8 +64,8 @@ impl EmailSenderApp {
 		}
 	}
 	fn send_email(& self, user: User) {
-		let username = email_sender::username(user.email.as_str());
-		let fullname = email_sender::fullname(user.email.as_str());
+		let username = email_sender::username(user.email.as_str()).unwrap();
+		let fullname = email_sender::fullname(user.email.as_str()).unwrap();
 
 		let body = self.email.body
 			.replace("{username}", username.as_str())

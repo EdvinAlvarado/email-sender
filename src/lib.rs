@@ -1,28 +1,52 @@
+use core::fmt;
+use std::error::Error;
+
+#[derive(Debug)]
+enum AppError {
+	EmailInputError
+}
+
+impl Error for AppError {}
+impl fmt::Display for AppError {
+	fn fmt(& self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			Self::EmailInputError => write!(f, "Email input error")
+		}
+	}
+
+} 
 
 pub fn username(email: &str) -> Result<String, Box<dyn Error>> {
-	let mut name_iter = email.split("@").next()?.to_lowercase().split(".");
+	let email_iter = email.split("@")
+	.next()
+	.ok_or(AppError::EmailInputError)?
+	.to_lowercase();
+	let mut name_iter = email_iter 
+	.split(".");
+
 	
-	let first_name = name_iter.next()?;
-	let mut last_name: String = name_iter
+	let first_name = name_iter.next().ok_or(AppError::EmailInputError)?;
+	let first_char = first_name.chars().nth(0).ok_or(AppError::EmailInputError)?;
+	let last_name: String = name_iter
 		.filter(|s| s.len() > 1)
 		.filter(|s| !s.contains("contractor"))
 		.map(|s| s.replace("-", ""))
-		.map(|s| if s == "ki" {"k"} else {s.as_str()})
+		.map(|s| if s == "ki" {"k".to_string()} else {s})
 		.collect();
-	
-	Ok(first_name[0]+last_name)
+	Ok(first_char.to_string()+last_name.as_str())
 }
 
-pub fn fullname(email: &str) -> String {
-	 email
+pub fn fullname(email: &str) -> Result<String, Box<dyn Error>> {
+	 Ok(email
 		.split("@")
-		.next()?
+		.next()
+		.ok_or(AppError::EmailInputError)?
 		.to_lowercase()
 		.replace("contractor", "")
 		.split(".")
 		.map(|s| uppercase_first_letter(s))
-		.collect::<&[&str]>()
-		.join(" ")
+		.collect::<Vec<String>>()
+		.join(" "))
 }
 
 // copied
