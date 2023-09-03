@@ -64,36 +64,30 @@ impl EmailSenderApp {
  		if let Some(path) = rfd::FileDialog::new().add_filter("csv", &["csv"]).pick_file() {
 			self.user_list= path;
 		}
-
+		
 		// read user list and create email json
 		let mut rdr = csv::Reader::from_path(self.user_list.as_path()).unwrap();
 		let mut emails: Vec<Email> = Vec::new();
 		for res in rdr.deserialize() {
 			let user: User = res.expect("Not a user record");
-		let username = email_sender::username(user.email.as_str()).unwrap();
-		let fullname = email_sender::fullname(user.email.as_str()).unwrap();
-
-		let body = self.email.body
-			.replace("{username}", username.as_str())
-			.replace("{fullname}", fullname.as_str())
-			.replace("{password}", user.password.as_str());
-
-		let subject = self.email.subject
-			.replace("{username}", username.as_str())
-			.replace("{fullname}", fullname.as_str())
-			.replace("{password}", user.password.as_str());
-		
-		if self.hide_password_from_cc && !self.email.cc.is_empty() {
-			MessageBuilder::new()
-				.with_recipient(user.email)
-				.with_subject(subject.as_str())
-				.with_body(body)
-				.spawn()
-				.unwrap();
+			let username = email_sender::username(user.email.as_str()).unwrap();
+			let fullname = email_sender::fullname(user.email.as_str()).unwrap();
 			
-			let body_for_cc = self.email.body
+			let body = self.email.body
 				.replace("{username}", username.as_str())
-				.replace("{password}", "[hidden]");
+				.replace("{fullname}", fullname.as_str())
+				.replace("{password}", user.password.as_str());
+
+			let subject = self.email.subject
+				.replace("{username}", username.as_str())
+				.replace("{fullname}", fullname.as_str())
+				.replace("{password}", user.password.as_str());
+
+			if self.hide_password_from_cc && !self.email.cc.is_empty() {
+				let body_for_cc = self.email.body
+					.replace("{username}", username.as_str())
+					.replace("{fullname}", fullname.as_str())
+					.replace("{password}", "[hidden]");		
 				
 				emails.push(
 					Email { to: user.email.clone(), cc: String::new(), subject: subject.clone(), body: body}
@@ -101,8 +95,8 @@ impl EmailSenderApp {
 				emails.push(
 					Email { to: self.email.cc.clone(), cc: String::new(), subject: subject, body: body_for_cc }
 				);	
-		}
-		else {
+			}
+			else {
 				emails.push(
 					Email { to: user.email, cc: self.email.cc.clone(), subject: subject, body: body }
 				);
@@ -150,6 +144,8 @@ impl EmailSenderApp {
 			});
 	}
 }
+
+
 
 impl eframe::App for EmailSenderApp {
 	fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
