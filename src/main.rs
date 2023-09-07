@@ -1,4 +1,4 @@
-use std::{path::PathBuf, fs, process::Command};
+use std::{path::PathBuf, fs, process::Command, str};
 use eframe::egui;
 use serde::{Serialize, Deserialize};
 use rfd;
@@ -107,10 +107,11 @@ impl EmailSenderApp {
 		if let Some(res_path) = rfd::FileDialog::new().add_filter("json", &["json"]).save_file() {
 			let email_json_str = serde_json::to_string(&emails).expect("serde failed");
 			fs::write(res_path.as_path(), email_json_str).unwrap();
-			Command::new("./email_backend.exe")
+			let output = Command::new("./email_backend.exe")
 				.arg(res_path.as_os_str())
 				.output()
 				.expect("failed to send email");
+			println!("{}", str::from_utf8(&output.stdout).unwrap());
 		}
 	}
 	
