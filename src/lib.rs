@@ -38,7 +38,7 @@ pub fn username(email: &str) -> Result<String, AppError> {
 	Ok(first_char.to_string()+last_name.as_str())
 }
 
-pub fn fullname(email: &str) -> Result<String, Box<dyn Error>> {
+pub fn fullname(email: &str) -> Result<String, AppError> {
 	 Ok(email
 		.split("@")
 		.next()
