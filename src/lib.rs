@@ -18,7 +18,7 @@ impl fmt::Display for AppError {
 
 } 
 
-pub fn username(email: &str) -> Result<String, Box<dyn Error>> {
+pub fn username(email: &str) -> Result<String, AppError> {
 	let email_iter = email.split("@")
 	.next()
 	.ok_or(AppError::EmailInputError)?
