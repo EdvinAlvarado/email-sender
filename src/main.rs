@@ -72,8 +72,14 @@ impl EmailSenderApp {
 		let mut emails: Vec<Email> = Vec::new();
 		for res in rdr.deserialize() {
 			let user: User = res.expect("Not a user record");
-			let username = email_sender::username(user.email.as_str()).unwrap();
-			let fullname = email_sender::fullname(user.email.as_str()).unwrap();
+			let username = match email_sender::username(user.email.as_str()) {
+				Ok(name) => name,
+				Err(e) => break,
+			};
+			let fullname = match email_sender::fullname(user.email.as_str()) {
+				Ok(n) => n,
+				Err(_) => break,
+			};
 			
 			let body = self.email.body
 				.replace("{username}", username.as_str())
@@ -107,7 +113,7 @@ impl EmailSenderApp {
 
 		// run email backend
 		if let Some(res_path) = rfd::FileDialog::new().add_filter("json", &["json"]).save_file() {
-			let email_json_str = serde_json::to_string(&emails).expect("serde failed");
+			let email_json_str = serde_json::to_string(&emails).unwrap();
 			fs::write(res_path.as_path(), email_json_str).unwrap();
 			let output = Command::new("./email_backend.exe")
 				.arg(res_path.as_os_str())
