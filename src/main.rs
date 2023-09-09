@@ -55,14 +55,28 @@ impl EmailSenderApp {
 	fn send_emails(&mut self) {
 		// autosave template
 		self.template_save();
-		// open user list
+
+		// create user list
 		if self.user_list.as_os_str().is_empty() {
 			if self.user_list_open().is_err() {
 				return;
 			}
 		}
+		let emails = self.create_emails();
 
-		// read user list and create email json
+		// run email backend
+		if let Some(res_path) = rfd::FileDialog::new().add_filter("json", &["json"]).save_file() {
+			let email_json_str = serde_json::to_string(&emails).unwrap();
+			fs::write(res_path.as_path(), email_json_str).unwrap();
+			let output = Command::new("./email_backend.exe")
+				.arg(res_path.as_os_str())
+				.output()
+				.expect("failed to send email");
+			println!("{}", str::from_utf8(&output.stdout).unwrap());
+		}
+	}
+
+	fn create_emails(& self) -> Vec<Email> {
 		let mut rdr = csv::Reader::from_path(self.user_list.as_path()).unwrap();
 		let mut emails: Vec<Email> = Vec::new();
 		for res in rdr.deserialize() {
@@ -105,17 +119,7 @@ impl EmailSenderApp {
 				);
 			}
 		}
-
-		// run email backend
-		if let Some(res_path) = rfd::FileDialog::new().add_filter("json", &["json"]).save_file() {
-			let email_json_str = serde_json::to_string(&emails).unwrap();
-			fs::write(res_path.as_path(), email_json_str).unwrap();
-			let output = Command::new("./email_backend.exe")
-				.arg(res_path.as_os_str())
-				.output()
-				.expect("failed to send email");
-			println!("{}", str::from_utf8(&output.stdout).unwrap());
-		}
+		emails
 	}
 	
 	fn template_open(&mut self) {
