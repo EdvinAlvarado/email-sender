@@ -118,13 +118,18 @@ impl EmailSenderApp {
 	fn file_open(&mut self) {
 		if let Some(path) = rfd::FileDialog::new().add_filter("yaml", &["yaml"]).pick_file() {
 			self.template = path;
+			let yf = fs::read_to_string(self.template.as_path()).unwrap();
+			self.email = serde_yaml::from_str(yf.as_str()).expect("not a yaml file");
 		}
-		let yf = fs::read_to_string(self.template.as_path()).unwrap();
-		self.email = serde_yaml::from_str(yf.as_str()).expect("not a yaml file");
 	}
-	fn file_save(& self) {
-		let yaml_text = serde_yaml::to_string(&self.email).unwrap();
-		fs::write(self.template.as_path(), yaml_text).unwrap();
+	fn file_save(&mut self) {
+		if !self.template.as_os_str().is_empty() {
+			let yaml_text = serde_yaml::to_string(&self.email).unwrap();
+			fs::write(self.template.as_path(), yaml_text).unwrap();
+		}
+		else {
+			self.file_save_as();
+		}
 	}
 	fn file_save_as(&mut self) {
 		if let Some(path) = rfd::FileDialog::new().add_filter("yaml", &["yaml"]).save_file() {
@@ -137,7 +142,7 @@ impl EmailSenderApp {
 			use egui::{menu, Button};
 
 			menu::bar(ui, |ui| {
-					ui.menu_button("File", |ui| {
+					ui.menu_button("Template", |ui| {
 							if ui.button("🗁 Open").clicked() {self.file_open()}
 							if ui.button("🗐 Save").clicked() {self.file_save()}
 							if ui.button("🗐 Save as").clicked() {self.file_save_as()}
@@ -155,15 +160,15 @@ impl eframe::App for EmailSenderApp {
 			self.show_menu(ui);
 			ui.checkbox(&mut self.hide_password_from_cc, "Hide password from cc?");
 			ui.horizontal(|ui| {
-				ui.label("subject:");
+				ui.label("subject:\t");
 				ui.text_edit_singleline(&mut self.email.subject);
 			});
 			ui.horizontal(|ui| {
-				ui.label("cc:");
+				ui.label("cc:\t");
 				ui.text_edit_singleline(&mut self.email.cc);
 			});
 			ui.horizontal(|ui| {
-				ui.label("body:");
+				ui.label("body:\t");
 				ui.text_edit_multiline(&mut self.email.body);
 			});
 			if ui.button("📤 send emails").clicked() {self.send_emails();}
