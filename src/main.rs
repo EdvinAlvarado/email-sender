@@ -54,12 +54,7 @@ impl EmailSenderApp {
 
 	fn send_emails(&mut self) {
 		// autosave template
-		if self.template.as_os_str().is_empty() {
-			self.template_save_as();
-		} else {
-			self.template_save();
-		}
-
+		self.template_save();
 		// open user list
 		if self.user_list.as_os_str().is_empty() {
 			if self.user_list_open().is_err() {
