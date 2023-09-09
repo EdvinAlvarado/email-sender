@@ -69,7 +69,7 @@ impl EmailSenderApp {
 			let user: User = res.expect("Not a user record");
 			let username = match email_sender::username(user.email.as_str()) {
 				Ok(name) => name,
-				Err(e) => break,
+				Err(_) => break,
 			};
 			let fullname = match email_sender::fullname(user.email.as_str()) {
 				Ok(n) => n,
