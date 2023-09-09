@@ -61,10 +61,12 @@ impl EmailSenderApp {
 		}
 
 		// open user list
- 		if let Some(path) = rfd::FileDialog::new().add_filter("csv", &["csv"]).pick_file() {
-			self.user_list= path;
+		if self.user_list.as_os_str().is_empty() {
+			if self.user_list_open().is_err() {
+				return;
+			}
 		}
-		
+
 		// read user list and create email json
 		let mut rdr = csv::Reader::from_path(self.user_list.as_path()).unwrap();
 		let mut emails: Vec<Email> = Vec::new();
@@ -138,6 +140,14 @@ impl EmailSenderApp {
 		self.template_save();
 	}
 
+	fn user_list_open(&mut self) -> Result<(), email_sender::AppError> {
+ 		if let Some(path) = rfd::FileDialog::new().add_filter("csv", &["csv"]).pick_file() {
+			self.user_list = path;
+			()
+		}
+		Err(email_sender::AppError::OpenFileError)
+	}
+
 	fn show_menu(&mut self, ui: &mut egui::Ui) {
 			use egui::{menu, Button};
 
@@ -146,7 +156,10 @@ impl EmailSenderApp {
 							if ui.button("🗁 Open").clicked() {self.template_open()}
 							if ui.button("🗐 Save").clicked() {self.template_save()}
 							if ui.button("🗐 Save as").clicked() {self.template_save_as()}
-					}) 
+					});
+					ui.menu_button("User List", |ui| {
+							if ui.button("🗁 Open").clicked() {let _ = self.user_list_open();}
+					});
 			});
 	}
 }
