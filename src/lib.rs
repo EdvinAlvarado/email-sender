@@ -2,15 +2,17 @@ use core::fmt;
 use std::error::Error;
 
 #[derive(Debug)]
-enum AppError {
-	EmailInputError
+pub enum AppError {
+	EmailInputError,
+	OpenFileError,
 }
 
 impl Error for AppError {}
 impl fmt::Display for AppError {
 	fn fmt(& self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
-			Self::EmailInputError => write!(f, "Email input error")
+			Self::EmailInputError => write!(f, "Email input error"),
+			Self::OpenFileError => write!(f, "cancelled file open")
 		}
 	}
 
