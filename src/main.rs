@@ -90,15 +90,15 @@ impl EmailSenderApp {
 					.replace("{password}", "[hidden]");		
 				
 				emails.push(
-					Email { to: user.email.clone(), cc: String::new(), subject: subject.clone(), body: body}
+					Email { to: user.email.clone(), cc: String::new(), subject: subject.clone(), body}
 				);
 				emails.push(
-					Email { to: self.email.cc.clone(), cc: String::new(), subject: subject, body: body_for_cc }
+					Email { to: self.email.cc.clone(), cc: String::new(), subject, body: body_for_cc }
 				);	
 			}
 			else {
 				emails.push(
-					Email { to: user.email, cc: self.email.cc.clone(), subject: subject, body: body }
+					Email { to: user.email, cc: self.email.cc.clone(), subject, body}
 				);
 			}
 		}
