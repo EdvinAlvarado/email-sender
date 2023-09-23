@@ -161,6 +161,7 @@ impl EmailSenderApp {
  		self.user_list = rfd::FileDialog::new().add_filter("csv", &["csv"]).pick_file();
 	}
 
+
 	fn show_menu(&mut self, ui: &mut egui::Ui) {
 			use egui::{menu, Button};
 
