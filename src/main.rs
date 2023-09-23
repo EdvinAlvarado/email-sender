@@ -133,6 +133,13 @@ impl EmailSenderApp {
 		}
 		Ok(())
 	}
+	/// Saves EmailTemplate to file.
+	///
+	/// # Panics
+	/// Panics if email template cannot be turned into yaml.
+	///
+	/// # Errors
+	/// This function will return an error if it could not same to file.
 	fn template_save(&mut self) -> BoxResult<()> {
 		match self.template.as_deref() {
 			Some(tmpl) => {
