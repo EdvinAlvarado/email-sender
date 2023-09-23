@@ -16,7 +16,7 @@ fn main() {
 	).unwrap();
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default)]
 struct EmailSenderApp {
 	hide_password_from_cc: bool,
 	template: Option<PathBuf>,
@@ -57,7 +57,7 @@ impl EmailSenderApp {
 
 	fn send_emails(&mut self) -> BoxResult<()> {
 		// autosave template
-		self.template_save();
+		let _ = self.template_save();
 		// Exit if user list is not loaded.
 		self.user_list.as_deref().ok_or(es::AppError::UserListEmptyError)?;
 
@@ -138,7 +138,7 @@ impl EmailSenderApp {
 				let yaml_text = serde_yaml::to_string(&self.email).unwrap();
 				fs::write(tmpl, yaml_text)?;
 			},
-			None => {self.template_save_as();},
+			None => {let _ = self.template_save_as();},
 		}
 		Ok(())
 	}
@@ -180,7 +180,7 @@ impl EmailSenderApp {
 							}
 					});
 					ui.menu_button("User List", |ui| {
-							if ui.button("🗁 Open").clicked() {let _ = self.user_list_open();}
+							if ui.button("🗁 Open").clicked() {self.user_list_open();}
 					});
 			});
 	}
