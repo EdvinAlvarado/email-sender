@@ -4,7 +4,8 @@ use std::error::Error;
 #[derive(Debug)]
 pub enum AppError {
 	EmailInputError,
-	OpenFileError,
+	CancelledFileError,
+	UserListEmptyError,
 }
 
 impl Error for AppError {}
@@ -12,13 +13,18 @@ impl fmt::Display for AppError {
 	fn fmt(& self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			Self::EmailInputError => write!(f, "Email input error"),
-			Self::OpenFileError => write!(f, "cancelled file open")
+			Self::CancelledFileError => write!(f, "cancelled file open"),
+			Self::UserListEmptyError => write!(f, "No user list loaded."),
 		}
 	}
 
-} 
+}
 
-pub fn username(email: &str) -> Result<String, AppError> {
+
+
+pub type AppResult<T> = Result<T, AppError>;
+
+pub fn username(email: &str) -> AppResult<String> {
 	let email_iter = email.split("@")
 	.next()
 	.ok_or(AppError::EmailInputError)?
@@ -38,7 +44,7 @@ pub fn username(email: &str) -> Result<String, AppError> {
 	Ok(first_char.to_string()+last_name.as_str())
 }
 
-pub fn fullname(email: &str) -> Result<String, AppError> {
+pub fn fullname(email: &str) -> AppResult<String> {
 	 Ok(email
 		.split("@")
 		.next()
@@ -71,4 +77,8 @@ fn ui_counter(ui: &mut egui::Ui, counter: &mut i32) {
 				*counter += 1;
 		}
 	});
+}
+
+pub fn error_message(ui: &mut egui::Ui, err: Result<(), Box<dyn Error>>) {
+	todo!()
 }
