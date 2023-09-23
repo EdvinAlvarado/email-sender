@@ -79,6 +79,9 @@ fn ui_counter(ui: &mut egui::Ui, counter: &mut i32) {
 	});
 }
 
-pub fn error_message(ui: &mut egui::Ui, err: Result<(), Box<dyn Error>>) {
-	todo!()
-}
+pub fn error_to_string(res: Result<(), Box<dyn Error>>) -> Option<String> {
+	 match res {
+		Ok(()) => None,
+		Err(err) => Some(err.to_string()),
+	}
+} 

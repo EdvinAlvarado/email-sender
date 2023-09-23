@@ -21,7 +21,8 @@ struct EmailSenderApp {
 	hide_password_from_cc: bool,
 	template: Option<PathBuf>,
 	user_list: Option<PathBuf>,
-	email: EmailTemplate
+	email: EmailTemplate,
+	error: Option<String>,
 }
 
 #[derive(Default, Serialize, Deserialize)]
@@ -165,10 +166,18 @@ impl EmailSenderApp {
 
 			menu::bar(ui, |ui| {
 					ui.menu_button("Template", |ui| {
-							if ui.button("🗁 Open").clicked() {es::error_message(ui, self.template_open())}
-							if ui.button("🗐 Save").clicked() {es::error_message(ui, self.template_save())}
-							if ui.button("🗐 Save as").clicked() {es::error_message(ui, self.template_save_as())}
-							if ui.button("🗐 Export").clicked() {es::error_message(ui, self.template_export())}
+							if ui.button("🗁 Open").clicked() {
+								self.error = es::error_to_string(self.template_open());
+							}
+							if ui.button("🗐 Save").clicked() {
+								self.error = es::error_to_string(self.template_save());
+							}
+							if ui.button("🗐 Save as").clicked() {
+								self.error = es::error_to_string(self.template_save_as());
+							}
+							if ui.button("🗐 Export").clicked() {
+								self.error = es::error_to_string(self.template_export());
+							}
 					});
 					ui.menu_button("User List", |ui| {
 							if ui.button("🗁 Open").clicked() {let _ = self.user_list_open();}
@@ -197,8 +206,16 @@ impl eframe::App for EmailSenderApp {
 				ui.label("body:\t");
 				ui.text_edit_multiline(&mut self.email.body);
 			});
-			if ui.button("📤 send emails").clicked() {self.send_emails();}
+			if ui.button("📤 send emails").clicked() {
+				self.error = es::error_to_string(self.send_emails());
+			}
+			
 		});
+		if let Some(err_display) = self.error.as_deref() {
+			egui::Window::new("error message").show(ctx, |ui| {
+				ui.label(err_display)
+			});
+		}
 	}
 }
 
