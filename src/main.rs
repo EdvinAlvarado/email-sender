@@ -9,7 +9,7 @@ type BoxResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 fn main() {
 	let mut native_options = eframe::NativeOptions::default();
-	native_options.initial_window_size = Option::from(egui::Vec2::new(450 as f32, 300 as f32));
+	native_options.initial_window_size = Option::from(egui::Vec2::new(700 as f32, 500 as f32));
 	eframe::run_native(
 		"Email Sender",
 		native_options,
@@ -22,6 +22,7 @@ struct EmailSenderApp {
 	hide_password_from_cc: bool,
 	template: Option<PathBuf>,
 	user_list: Option<PathBuf>,
+	users: Option<Vec<(User, String, String)>>,
 	email: EmailTemplate,
 	error: Option<String>,
 }
@@ -78,34 +79,22 @@ impl EmailSenderApp {
 	}
 
 	fn create_emails(& self) -> BoxResult<Vec<Email>> {
-		let ul = self.user_list.as_deref().ok_or(es::AppError::UserListEmptyError)?;
-		let mut rdr = csv::Reader::from_path(ul)?;
 		let mut emails: Vec<Email> = Vec::new();
-		for res in rdr.deserialize() {
-			let user: User = res?;
-			let username = match email_sender::username(user.email.as_str()) {
-				Ok(name) => name,
-				Err(_) => break,
-			};
-			let fullname = match email_sender::fullname(user.email.as_str()) {
-				Ok(n) => n,
-				Err(_) => break,
-			};
-			
+		for (user, username, fullname) in self.users.as_ref().unwrap() {	
 			let body = self.email.body
-				.replace("{username}", username.as_str())
-				.replace("{fullname}", fullname.as_str())
-				.replace("{password}", user.password.as_str());
+				.replace("{username}", username)
+				.replace("{fullname}", fullname)
+				.replace("{password}", &user.password);
 
 			let subject = self.email.subject
-				.replace("{username}", username.as_str())
-				.replace("{fullname}", fullname.as_str())
-				.replace("{password}", user.password.as_str());
+				.replace("{username}", username)
+				.replace("{fullname}", fullname)
+				.replace("{password}", &user.password);
 
 			if self.hide_password_from_cc && !self.email.cc.is_empty() {
 				let body_for_cc = self.email.body
-					.replace("{username}", username.as_str())
-					.replace("{fullname}", fullname.as_str())
+					.replace("{username}", username)
+					.replace("{fullname}", fullname)
 					.replace("{password}", "[hidden]");		
 				
 				emails.push(
@@ -117,7 +106,7 @@ impl EmailSenderApp {
 			}
 			else {
 				emails.push(
-					Email { to: user.email, cc: self.email.cc.clone(), subject, body}
+					Email { to: user.email.clone(), cc: self.email.cc.clone(), subject, body}
 				);
 			}
 		}
@@ -165,8 +154,19 @@ impl EmailSenderApp {
 		Ok(())
 	}
 
-	fn user_list_open(&mut self) {
+	fn user_list_open(&mut self) -> BoxResult<()> {
  		self.user_list = rfd::FileDialog::new().add_filter("csv", &["csv"]).pick_file();
+		let user_list = self.user_list.as_deref().ok_or(es::AppError::UserListEmptyError)?;
+		let mut rdr = csv::Reader::from_path(user_list)?;
+		let mut user_rows = vec![];
+		for res in rdr.deserialize() {
+			let user: User = res?;
+			let username = es::username(&user.email)?;
+			let fullname = es::fullname(&user.email)?;
+			user_rows.push((user, username, fullname));
+		}
+		self.users = Some(user_rows);
+		Ok(())
 	}
 
 
@@ -189,9 +189,36 @@ impl EmailSenderApp {
 							}
 					});
 					ui.menu_button("User List", |ui| {
-							if ui.button("🗁 Open").clicked() {self.user_list_open();}
+							if ui.button("🗁 Open").clicked() {
+								self.error = es::error_to_string(self.user_list_open());
+							}
 					});
 			});
+	}
+
+	fn show_user_table(& self, ui: &mut egui::Ui) {
+		use egui_extras::{TableBuilder, Column};
+		TableBuilder::new(ui)
+			.column(Column::initial(200.0).resizable(true))
+			.column(Column::auto().resizable(true))
+			.column(Column::initial(100.0).resizable(true))
+			.column(Column::remainder().resizable(true))
+			.header(14.0, |mut header| {
+				header.col(|ui| {ui.heading("email");});
+				header.col(|ui| {ui.heading("password");});
+				header.col(|ui| {ui.heading("username");});
+				header.col(|ui| {ui.heading("fullname");});
+			})
+			.body(|mut body| {
+				for (user,username,fullname) in self.users.as_ref().unwrap() {
+					body.row(10.0, |mut row| {
+						row.col(|ui| {ui.label(&user.email);});
+						row.col(|ui| {ui.label(&user.password);});
+						row.col(|ui| {ui.label(username);});
+						row.col(|ui| {ui.label(fullname);});
+					})
+				}
+		});
 	}
 }
 
@@ -218,7 +245,9 @@ impl eframe::App for EmailSenderApp {
 			if ui.button("📤 send emails").clicked() {
 				self.error = es::error_to_string(self.send_emails());
 			}
-			
+			if self.users.is_some() {
+				self.show_user_table(ui);
+			}
 		});
 		if let Some(err_display) = self.error.as_deref() {
 			egui::Window::new("error message").show(ctx, |ui| {

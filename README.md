@@ -1,2 +1,2 @@
 # email-sender
-Send mass individualize emails
+GUI to send mass individualize emails for outlook.

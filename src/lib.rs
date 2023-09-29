@@ -7,6 +7,7 @@ pub enum AppError {
 	EmailInputError,
 	CancelledFileError,
 	UserListEmptyError,
+	UserLoadError,
 }
 
 impl Error for AppError {}
@@ -16,6 +17,7 @@ impl fmt::Display for AppError {
 			Self::EmailInputError => write!(f, "Email input error"),
 			Self::CancelledFileError => write!(f, "cancelled file open"),
 			Self::UserListEmptyError => write!(f, "No user list loaded."),
+			Self::UserLoadError => write!(f, "Email cannot be trasnformed to username and/or fullname."),
 		}
 	}
 
@@ -34,8 +36,8 @@ pub fn username(email: &str) -> AppResult<String> {
 	.split(".");
 
 	
-	let first_name = name_iter.next().ok_or(AppError::EmailInputError)?;
-	let first_char = first_name.chars().nth(0).ok_or(AppError::EmailInputError)?;
+	let first_name = name_iter.next().ok_or(AppError::UserLoadError)?;
+	let first_char = first_name.chars().nth(0).ok_or(AppError::UserLoadError)?;
 	let last_name: String = name_iter
 		.filter(|s| s.len() > 1)
 		.filter(|s| !s.contains("contractor"))
