@@ -10,20 +10,20 @@ class Email:
         self.subject = email["subject"]
         self.body = email["body"]
 
-def send_email(email: Email) -> None:
-    outlook = win32.Dispatch('outlook.application')
+    def send_email(self) -> None:
+        outlook = win32.Dispatch('outlook.application')
 
-    mail = outlook.CreateItem(0)
-    mail.To = email.to
-    mail.CC = email.cc
-    mail.Subject = email.subject
-    mail.Body = email.body
-    mail.Send()
+        mail = outlook.CreateItem(0)
+        mail.To = self.to
+        mail.CC = self.cc
+        mail.Subject = self.subject
+        mail.Body = self.body
+        mail.Send()
 
 
 if __name__ == "__main__":
     with open(sys.argv[1]) as jf:
         email_list = json.load(jf)
     for d in email_list:
-        send_email(Email(d))
+        Email(d).send_email()
 
