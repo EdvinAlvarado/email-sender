@@ -1,29 +1,17 @@
-use std::error::Error;
-use std::fmt;
+use thiserror::Error;
 
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum AppError {
+	#[error("Email input error")]
 	EmailInputError,
+	#[error("cancelled file open")]
 	CancelledFileError,
+	#[error("No user list loaded.")]
 	UserListEmptyError,
+	#[error("Email cannot be trasnformed to username and/or fullname.")]
 	UserLoadError,
 }
-
-impl Error for AppError {}
-impl fmt::Display for AppError {
-	fn fmt(& self, f: &mut fmt::Formatter) -> fmt::Result {
-		match self {
-			Self::EmailInputError => write!(f, "Email input error"),
-			Self::CancelledFileError => write!(f, "cancelled file open"),
-			Self::UserListEmptyError => write!(f, "No user list loaded."),
-			Self::UserLoadError => write!(f, "Email cannot be trasnformed to username and/or fullname."),
-		}
-	}
-
-}
-
-
 
 pub type AppResult<T> = Result<T, AppError>;
 
@@ -82,7 +70,7 @@ fn ui_counter(ui: &mut egui::Ui, counter: &mut i32) {
 	});
 }
 
-pub fn error_to_string(res: Result<(), Box<dyn Error>>) -> Option<String> {
+pub fn error_to_string(res: Result<(), Box<dyn std::error::Error>>) -> Option<String> {
 	 match res {
 		Ok(()) => None,
 		Err(err) => Some(err.to_string()),
