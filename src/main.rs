@@ -76,19 +76,21 @@ impl EmailSenderApp {
         let emails = self.create_emails()?;
 
         // run email backend
-        if let Some(res_path) = rfd_filter!("json").save_file()
-        {
+        if let Some(res_path) = rfd_filter!("json").save_file() {
             let email_json_str = serde_json::to_string(&emails)?;
             fs::write(res_path.as_path(), email_json_str)?;
-            let output = Command::new("./email.ps1")
+            let output = Command::new("powershell")
+				.arg("-File")
+				.arg("email.ps1")
                 .arg(res_path.as_os_str())
                 .output()
                 .expect("failed to send email");
             println!("{}", str::from_utf8(&output.stdout).unwrap());
-			let cleanup = Command::new("rm")
-				.arg(res_path.as_os_str())
-				.output()
-				.expect("could not remove temp json file");
+            let cleanup = Command::new("powershell")
+				.arg("rm")
+                .arg(res_path.as_os_str())
+                .output()
+                .expect("could not remove temp json file");
             println!("{}", str::from_utf8(&cleanup.stdout).unwrap());
         }
         Ok(())
@@ -180,7 +182,7 @@ impl EmailSenderApp {
     }
     fn template_export(&self) -> BoxResult<()> {
         if let Some(file) = rfd_filter!("yaml").save_file() {
-			let yaml_text = serde_yaml::to_string(&self.email).unwrap();
+            let yaml_text = serde_yaml::to_string(&self.email).unwrap();
             fs::write(file.as_path(), yaml_text)?;
         };
         Ok(())
