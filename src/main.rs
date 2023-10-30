@@ -80,11 +80,16 @@ impl EmailSenderApp {
         {
             let email_json_str = serde_json::to_string(&emails)?;
             fs::write(res_path.as_path(), email_json_str)?;
-            let output = Command::new("./email_backend.exe")
+            let output = Command::new("./email.ps1")
                 .arg(res_path.as_os_str())
                 .output()
                 .expect("failed to send email");
             println!("{}", str::from_utf8(&output.stdout).unwrap());
+			let cleanup = Command::new("rm")
+				.arg(res_path.as_os_str())
+				.output()
+				.expect("could not remove temp json file");
+            println!("{}", str::from_utf8(&cleanup.stdout).unwrap());
         }
         Ok(())
     }
