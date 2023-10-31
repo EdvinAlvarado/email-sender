@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 use csv;
 use eframe::egui;
 use email_sender as es;
@@ -76,24 +77,15 @@ impl EmailSenderApp {
         let emails = self.create_emails()?;
 
         // run email backend
-        if let Some(res_path) = rfd_filter!("json").save_file() {
-            let email_json_str = serde_json::to_string(&emails)?;
-            fs::write(res_path.as_path(), email_json_str)?;
-            let output = Command::new("powershell")
-				.arg("-File")
-				.arg("email.ps1")
-                .arg(res_path.as_os_str())
-                .output()
-                .expect("failed to send email");
-            println!("{}", str::from_utf8(&output.stdout).unwrap());
-            let cleanup = Command::new("powershell")
-				.arg("rm")
-                .arg(res_path.as_os_str())
-                .output()
-                .expect("could not remove temp json file");
-            println!("{}", str::from_utf8(&cleanup.stdout).unwrap());
-        }
-        Ok(())
+		let email_json_str = serde_json::to_string(&emails)?;
+		let _output = Command::new("powershell")
+			.arg("-File")
+			.arg("email.ps1")
+			.arg(email_json_str)
+			.output()
+			.expect("failed to send email");
+        
+		Ok(())
     }
 
     fn create_emails(&self) -> BoxResult<Vec<Email>> {

@@ -3,7 +3,7 @@
 #Import-Module Microsoft.PowerShell.Utility
 
 
-$emails = Get-Content -Raw $args[0] | ConvertFrom-Json
+$emails = $args[0] | ConvertFrom-Json
 # Write-Host ($emails | Format-Table | Out-String)
 $outlook = New-Object -ComObject Outlook.Application
 
@@ -17,4 +17,4 @@ foreach ($e in $emails) {
     $email.Send()
 }
 
-$outlook.Quit()
+#$outlook.Quit()
