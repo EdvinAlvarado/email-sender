@@ -10,7 +10,7 @@ type BoxResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 fn main() {
     let mut native_options = eframe::NativeOptions::default();
-    native_options.initial_window_size = Option::from(egui::Vec2::new(700 as f32, 500 as f32));
+	native_options.viewport.inner_size = Option::from(egui::Vec2::new(700 as f32, 500 as f32));
     eframe::run_native(
         "Email Sender",
         native_options,
