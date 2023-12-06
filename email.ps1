@@ -13,6 +13,9 @@ foreach ($e in $emails) {
     $email.CC = $e.cc
     $email.Subject = $e.subject
     $email.Body = $e.body
+	if ($e.attachment) {
+		$email.Attachments.add($e.attachment)
+	}
 
     $email.Send()
 }
