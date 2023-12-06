@@ -24,6 +24,7 @@ struct EmailSenderApp {
     hide_password_from_cc: bool,
     template: Option<PathBuf>,
     user_list: Option<PathBuf>,
+    attachment: Option<PathBuf>,
     users: Option<Vec<(User, String, String)>>,
     email: EmailTemplate,
     error: Option<String>,
@@ -33,6 +34,7 @@ struct EmailSenderApp {
 struct Email {
     to: String,
     cc: String,
+    attachment: String,
     subject: String,
     body: String,
 }
@@ -116,12 +118,14 @@ impl EmailSenderApp {
                 emails.push(Email {
                     to: user.email.clone(),
                     cc: String::new(),
+                    attachment: attachment.clone(),
                     subject: subject.clone(),
                     body,
                 });
                 emails.push(Email {
                     to: self.email.cc.clone(),
                     cc: String::new(),
+                    attachment,
                     subject,
                     body: body_for_cc,
                 });
@@ -129,12 +133,17 @@ impl EmailSenderApp {
                 emails.push(Email {
                     to: user.email.clone(),
                     cc: self.email.cc.clone(),
+                    attachment,
                     subject,
                     body,
                 });
             }
         }
         Ok(emails)
+    }
+
+	fn attachment_as_string(&self) -> String {
+		self.attachment.clone().unwrap_or(PathBuf::new()).to_string_lossy().to_string()
     }
 
     // Fail if either path/file does not exist or the yaml file does not match email format
@@ -197,6 +206,11 @@ impl EmailSenderApp {
         self.users = Some(user_rows);
         Ok(())
     }
+    //TODO
+    fn attachment_open(&mut self) -> BoxResult<()> {
+        self.attachment = rfd::FileDialog::new().pick_file();
+        Ok(())
+    }
 
     fn show_menu(&mut self, ui: &mut egui::Ui) {
         use egui::{menu, Button};
@@ -219,6 +233,11 @@ impl EmailSenderApp {
             ui.menu_button("User List", |ui| {
                 if ui.button("🗁 Open").clicked() {
                     self.error = es::error_to_string(self.user_list_open());
+                }
+            });
+            ui.menu_button("Attachment", |ui| {
+                if ui.button("🗁 Select").clicked() {
+                    self.error = es::error_to_string(self.attachment_open());
                 }
             });
         });
@@ -272,6 +291,10 @@ impl eframe::App for EmailSenderApp {
             ui.heading("Email Sender");
             self.show_menu(ui);
             ui.checkbox(&mut self.hide_password_from_cc, "Hide password from cc?");
+            ui.horizontal(|ui| {
+                ui.label("attachment:\t");
+                ui.label(self.attachment_as_string());
+            });
             ui.horizontal(|ui| {
                 ui.label("subject:\t");
                 ui.text_edit_singleline(&mut self.email.subject);
