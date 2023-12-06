@@ -70,29 +70,30 @@ impl EmailSenderApp {
 
     fn send_emails(&mut self) -> BoxResult<()> {
         // autosave template
-        let _ = self.template_save();
+        self.template_save()?;
         // Exit if user list is not loaded.
         self.user_list
-            .as_deref()
+            .as_ref()
             .ok_or(es::AppError::UserListEmptyError)?;
 
         let emails = self.create_emails()?;
 
         // run email backend
-		let email_json_str = serde_json::to_string(&emails)?;
-		let _output = Command::new("powershell")
-			.arg("-File")
-			.arg("email.ps1")
-			.arg(email_json_str)
-			.output()
-			.expect("failed to send email");
-        
-		Ok(())
+        let email_json_str = serde_json::to_string(&emails)?;
+        let _output = Command::new("powershell")
+            .arg("-File")
+            .arg("email.ps1")
+            .arg(email_json_str)
+            .output()
+            .expect("failed to send email");
+
+        Ok(())
     }
 
     fn create_emails(&self) -> BoxResult<Vec<Email>> {
         let mut emails: Vec<Email> = Vec::new();
         for (user, username, fullname) in self.users.as_ref().unwrap() {
+            let attachment = self.attachment_as_string();
             let body = self
                 .email
                 .body
@@ -144,7 +145,7 @@ impl EmailSenderApp {
 
 	fn attachment_as_string(&self) -> String {
 		self.attachment.clone().unwrap_or(PathBuf::new()).to_string_lossy().to_string()
-    }
+	}
 
     // Fail if either path/file does not exist or the yaml file does not match email format
     fn template_open(&mut self) -> BoxResult<()> {
