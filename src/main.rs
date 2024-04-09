@@ -50,6 +50,9 @@ struct EmailTemplate {
 struct User {
     email: String,
     password: String,
+	var1: Option<String>,
+	var2: Option<String>,
+	var3: Option<String>,
 }
 
 #[macro_export]
@@ -99,14 +102,20 @@ impl EmailSenderApp {
                 .body
                 .replace("{username}", username)
                 .replace("{fullname}", fullname)
-                .replace("{password}", &user.password);
+                .replace("{password}", &user.password)
+                .replace("{var1}", &user.var1.as_deref().unwrap_or_default())
+                .replace("{var2}", &user.var2.as_deref().unwrap_or_default())
+                .replace("{var3}", &user.var3.as_deref().unwrap_or_default());
 
             let subject = self
                 .email
                 .subject
                 .replace("{username}", username)
                 .replace("{fullname}", fullname)
-                .replace("{password}", &user.password);
+                .replace("{password}", &user.password)
+                .replace("{var1}", &user.var1.as_deref().unwrap_or_default())
+                .replace("{var2}", &user.var2.as_deref().unwrap_or_default())
+                .replace("{var3}", &user.var3.as_deref().unwrap_or_default());
 
             if self.hide_password_from_cc && !self.email.cc.is_empty() {
                 let body_for_cc = self
@@ -114,7 +123,10 @@ impl EmailSenderApp {
                     .body
                     .replace("{username}", username)
                     .replace("{fullname}", fullname)
-                    .replace("{password}", "[hidden]");
+                    .replace("{password}", "[hidden]")
+                	.replace("{var1}", &user.var1.as_deref().unwrap_or_default())
+                	.replace("{var2}", &user.var2.as_deref().unwrap_or_default())
+                	.replace("{var3}", &user.var3.as_deref().unwrap_or_default());
 
                 emails.push(Email {
                     to: user.email.clone(),
@@ -196,7 +208,8 @@ impl EmailSenderApp {
             .user_list
             .as_deref()
             .ok_or(es::AppError::UserListEmptyError)?;
-        let mut rdr = csv::Reader::from_path(user_list)?;
+        
+		let mut rdr = csv::Reader::from_path(user_list)?;
         let mut user_rows = vec![];
         for res in rdr.deserialize() {
             let user: User = res?;
