@@ -1,6 +1,6 @@
 [package]
 name = "email-sender"
-version = "1.1.0"
+version = "1.1.1"
 edition = "2021"
 
 [profile.release]
@@ -13,7 +13,7 @@ eframe = "0.27.2"
 egui = "0.27.2"
 egui_extras = "0.27.2"
 rfd = "0.14.1"
-serde = {version = "1.0.197", features = ["derive"]}
-serde_json = "1.0.108"
-serde_yaml = "0.9.27"
-thiserror = "1.0.50"
+serde = { version = "1.0.199", features = ["derive"] }
+serde_json = "1.0.116"
+serde_yaml = "0.9.34+deprecated"
+thiserror = "1.0.59"

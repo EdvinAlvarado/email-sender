@@ -301,6 +301,47 @@ impl EmailSenderApp {
                 }
             });
     }
+    fn show_gui_table(&mut self, ui: &mut egui::Ui) {
+        use egui_extras::{Column, TableBuilder};
+        TableBuilder::new(ui)
+            .column(Column::initial(50.0))
+            .column(Column::remainder().resizable(true))
+            .body(|mut body| {
+                body.row(20.0, |mut row| {
+                    row.col(|ui| {
+                        ui.label("subject:");
+                    });
+                    row.col(|ui| {
+                        ui.add_sized(
+                            ui.available_size(),
+                            egui::TextEdit::singleline(&mut self.email.subject),
+                        );
+                    });
+                });
+                body.row(20.0, |mut row| {
+                    row.col(|ui| {
+                        ui.label("cc:");
+                    });
+                    row.col(|ui| {
+                        ui.add_sized(
+                            ui.available_size(),
+                            egui::TextEdit::singleline(&mut self.email.cc),
+                        );
+                    });
+                });
+                body.row(20.0, |mut row| {
+                    row.col(|ui| {
+                        ui.label("body:");
+                    });
+                    row.col(|ui| {
+                        ui.add_sized(
+                            ui.available_size(),
+                            egui::TextEdit::multiline(&mut self.email.body),
+                        );
+                    });
+                });
+            });
+    }
 }
 
 impl eframe::App for EmailSenderApp {
@@ -313,18 +354,7 @@ impl eframe::App for EmailSenderApp {
                 ui.label("attachment:\t");
                 ui.label(self.attachment_as_string());
             });
-            ui.horizontal(|ui| {
-                ui.label("subject:\t");
-                ui.text_edit_singleline(&mut self.email.subject);
-            });
-            ui.horizontal(|ui| {
-                ui.label("cc:\t");
-                ui.text_edit_singleline(&mut self.email.cc);
-            });
-            ui.horizontal(|ui| {
-                ui.label("body:\t");
-                ui.text_edit_multiline(&mut self.email.body);
-            });
+            self.show_gui_table(ui);
             if ui.button("📤 send emails").clicked() {
                 self.error = es::error_to_string(self.send_emails());
             }
