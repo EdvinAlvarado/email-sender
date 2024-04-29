@@ -10,7 +10,7 @@ type BoxResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 fn main() {
     let mut native_options = eframe::NativeOptions::default();
-	native_options.viewport.inner_size = Option::from(egui::Vec2::new(700 as f32, 500 as f32));
+    native_options.viewport.inner_size = Option::from(egui::Vec2::new(700 as f32, 500 as f32));
     eframe::run_native(
         "Email Sender",
         native_options,
@@ -50,9 +50,9 @@ struct EmailTemplate {
 struct User {
     email: String,
     password: String,
-	var1: Option<String>,
-	var2: Option<String>,
-	var3: Option<String>,
+    var1: Option<String>,
+    var2: Option<String>,
+    var3: Option<String>,
 }
 
 #[macro_export]
@@ -124,9 +124,9 @@ impl EmailSenderApp {
                     .replace("{username}", username)
                     .replace("{fullname}", fullname)
                     .replace("{password}", "[hidden]")
-                	.replace("{var1}", &user.var1.as_deref().unwrap_or_default())
-                	.replace("{var2}", &user.var2.as_deref().unwrap_or_default())
-                	.replace("{var3}", &user.var3.as_deref().unwrap_or_default());
+                    .replace("{var1}", &user.var1.as_deref().unwrap_or_default())
+                    .replace("{var2}", &user.var2.as_deref().unwrap_or_default())
+                    .replace("{var3}", &user.var3.as_deref().unwrap_or_default());
 
                 emails.push(Email {
                     to: user.email.clone(),
@@ -155,9 +155,13 @@ impl EmailSenderApp {
         Ok(emails)
     }
 
-	fn attachment_as_string(&self) -> String {
-		self.attachment.clone().unwrap_or(PathBuf::new()).to_string_lossy().to_string()
-	}
+    fn attachment_as_string(&self) -> String {
+        self.attachment
+            .clone()
+            .unwrap_or(PathBuf::new())
+            .to_string_lossy()
+            .to_string()
+    }
 
     // Fail if either path/file does not exist or the yaml file does not match email format
     fn template_open(&mut self) -> BoxResult<()> {
@@ -208,8 +212,8 @@ impl EmailSenderApp {
             .user_list
             .as_deref()
             .ok_or(es::AppError::UserListEmptyError)?;
-        
-		let mut rdr = csv::Reader::from_path(user_list)?;
+
+        let mut rdr = csv::Reader::from_path(user_list)?;
         let mut user_rows = vec![];
         for res in rdr.deserialize() {
             let user: User = res?;
